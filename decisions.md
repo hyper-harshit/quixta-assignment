@@ -39,7 +39,7 @@ Required behaviour and required tests come before the optional test and the fake
 | D5 | **Jest + `jest-expo` + `@testing-library/react-native`**. | The Expo-supported path; `expo-router/testing-library` only works with Jest. |
 | D6 | No state library, no UI kit, no date picker. Plain `StyleSheet`, a small module store read with `useSyncExternalStore`. | Visual design is out of scope; fewer native dependencies means fewer build risks. |
 | D7 | TypeScript `strict`. No ESLint setup. | Lint config is not graded. |
-| D63 | Local git repository, small commits as the work progresses, authored as Harshit Gupta `<harshit@hypercode.tech>` (set in the repo's own config). Pushing is done by hand. | Keeps a work history. |
+| D63 | Local git repository. | Changed during the build |
 
 Dependencies beyond the template, and why each is there:
 
@@ -171,7 +171,7 @@ Test handles, exported from `src/api/fakeServer.ts`:
 |---|---|---|
 | D44 | Rely on Expo Router's file-based linking with `scheme: "worklog"`. No manual `Linking` listeners. | `worklog://entries/srv_1` maps to `app/entries/[id].tsx` for both warm and cold start. |
 | D45 | The root layout starts the app (session, cache, network, first sync). The detail screen shows a loading state until the entry is found or the first sync has finished, and only then shows `Entry not found`. | On a cold start the detail screen is the first screen and has no data yet. |
-| D46 | The Stack is anchored on the list, and "Back to list" uses `router.back()` when there is history and `router.replace('/')` when there is not. | A cold-start deep link has no screen to go back to. |
+| D46 | The Stack is anchored on the list, and "Back to list" (`src/navigation.ts`) uses `router.dismissAll()` when there are screens underneath and `router.replace('/')` when there are not. The detail screen shows "Back to list" for a found entry too. | A cold-start deep link may have no screen to go back to. |
 | D47 | Web output is `single` (SPA) with the Metro bundler. | `/entries/srv_1` is a dynamic route with data that only exists at runtime. |
 | D48 | A locally queued entry that the server has not seen yet opens in the detail screen too, with `Waiting to sync`. | |
 
@@ -208,10 +208,12 @@ adb shell am start -W -a android.intent.action.VIEW -d "worklog://entries/srv_1"
 | D54 | `__mocks__/expo-secure-store.ts` is an in-memory map with a reset helper. AsyncStorage and NetInfo use their official Jest mocks. | Runs without a device. |
 | D55 | Tests use the real fake server and the real `sync`; only device storage and NetInfo are mocked. Each test resets server, storage and store. | The tests exercise the same code the app runs. |
 | D56 | **Test 1, submitted row:** seed, enqueue a `saveDraft` for `srv_1` with a new note, `sync()`, assert the server note is `Lobby`, an outcome for `srv_1` says `Server copy kept`, and the queue is empty. | |
-| D57 | **Test 2, one refresh:** (a) expire the token, queue a draft, `sync()`; assert refresh count 1, stored `access_token` is `access_2`, the draft is on the server. (b) expire again, turn on `failRetryAfterRefresh`, queue another draft, `sync()`; assert the count rose by exactly one, the result is `Session expired`, and the operation is still queued. (c) the same failing case from a fresh server, asserting the count is exactly 1. | Covers both readings of "did not run a second time". |
+| D57 | **Test 2, one refresh** (`__tests__/sync.refresh.test.ts`), each case from a fresh server: (a) expire the token, queue a draft, `sync()`; assert refresh count 1, stored `access_token` is `access_2`, the draft is on the server. (b) expire, turn on `failRetryAfterRefresh`, `sync()`; assert the count is exactly 1, the result is `Session expired`, and the operation is still queued. (c) a second `sync()` in the failing state refreshes once more (count 2, D34), and once the retry is allowed again the stored `access_2` works with no further refresh. (d) a stored refresh token other than `refresh_ok` is refused. | "Did not run a second time" is read as: never twice for one operation. |
+| D67 | **Extra test** (`__tests__/sync.offline.test.ts`): offline, a queued change stays queued and its row says `Waiting to sync`; back online it is sent; a queued submit marks the server row submitted. | The offline rules are in the brief but not in its three required tests. |
 | D58 | **Test 3, draft restore:** render the new-entry screen, fill all four fields, unmount, render a new tree, assert the four values; press Clear draft, assert the fields are empty and `draft_form` is gone. | Goes through the screen, the stronger of the two options the brief allows. |
 | D59 | **Optional test 4:** render the detail route with `expo-router/testing-library` for `/entries/srv_1` and for an unknown id. | "Welcome", so it is last. |
-| D66 | I run `npx tsc --noEmit` only. Jest and the app are run by Harshit, who reports the results. | Agreed in review. |
+| D66 | I run `npx tsc --noEmit` only. Jest and the app are run by Harshit, who reports the results. The one exception was the run on 2026-11-12, when Harshit lifted the rule until the Jest and device tests passed. | Agreed in review. |
+| D68 | **Device tests** are Maestro flows in `e2e/`, one per behaviour in the brief, run against a release build on the Android emulator (`npm run e2e:build:android`, `npm run e2e`). They are separate from Jest. | Jest mocks storage, NetInfo and the native deep-link path, so only a device run checks cold-start links, a real restart and real airplane mode. A release build has no development launcher in front of a cold start. Maestro needs no code in the app beyond the `testID`s already there. |
 
 ### 3.11 Documents
 
