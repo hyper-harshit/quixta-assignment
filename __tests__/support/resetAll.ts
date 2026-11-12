@@ -19,7 +19,7 @@ export async function resetAll(): Promise<void> {
 
 /** A draft made on the device that the server has not seen. */
 export const LOCAL_DRAFT: Entry = {
-  id: 'loc_1',
+  id: 'srv_2',
   category: 'repair',
   date: '2026-06-02',
   durationMinutes: 90,

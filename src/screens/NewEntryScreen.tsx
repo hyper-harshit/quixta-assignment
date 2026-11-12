@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 
 import { EntryForm } from '../components/EntryForm';
-import { newId } from '../ids';
+import { nextEntryId } from '../ids';
 import { MSG, describeOutcome } from '../messages';
 import { clearDraftForm, loadDraftForm, saveDraftForm } from '../storage/draftForm';
 import { queueChange, runSync, useRows } from '../store';
@@ -64,12 +64,10 @@ export function NewEntryScreen() {
       return;
     }
 
-    const entry = formToEntry(values, newId('loc'), kind === 'submit' ? 'submitted' : 'draft');
-    const duplicate = hasDuplicate(
-      rows.map((row) => row.entry),
-      entry.category,
-      entry.date,
-    );
+    const known = rows.map((row) => row.entry);
+    const id = nextEntryId(known.map((entry) => entry.id));
+    const entry = formToEntry(values, id, kind === 'submit' ? 'submitted' : 'draft');
+    const duplicate = hasDuplicate(known, entry.category, entry.date);
 
     setSaving(true);
     try {

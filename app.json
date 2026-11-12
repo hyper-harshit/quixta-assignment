@@ -2,6 +2,7 @@
   "expo": {
     "name": "Work Log",
     "slug": "worklog",
+    "owner": "hyper-code",
     "scheme": "worklog",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -9,7 +10,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.quixta.worklog"
+      "bundleIdentifier": "com.quixta.worklog",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.quixta.worklog",
@@ -34,13 +38,13 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/00000000-0000-0000-0000-000000000000",
+      "url": "https://u.expo.dev/5606ffe9-205b-4b45-9ff4-ff47384d8a30",
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
     "extra": {
       "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
+        "projectId": "5606ffe9-205b-4b45-9ff4-ff47384d8a30"
       }
     }
   }

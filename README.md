@@ -143,7 +143,6 @@ Other documents: [`CONFLICTS.md`](CONFLICTS.md) for the conflict rule, [`RELEASE
 - **`Server copy kept` is not saved.** The notice stays on the row until the app restarts or the entry is edited again.
 - **The date is typed, not picked.** It must be a real date in `YYYY-MM-DD`.
 - **No delete, and the queue is not compacted.** Two queued edits to one entry are sent one after the other.
-- **EAS ids are placeholders.** `updates.url` and `extra.eas.projectId` use an all-zero project id; `eas init` would replace them. No build or update has been published.
 - **No ESLint or CI.**
 
 <!-- TODO (Harshit): before sending, note here anything from the brief that was not checked by hand, for example warm and cold deep link on each platform. -->

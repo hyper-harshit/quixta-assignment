@@ -1,6 +1,6 @@
 # Release
 
-Setup lives in `app.json` and `eas.json`. The EAS project id is a placeholder; nothing has been built or published.
+Setup lives in `app.json` and `eas.json`. The EAS release was tested on a personal EAS project (account - hyper-code).
 
 ## Versioning
 

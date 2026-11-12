@@ -99,7 +99,7 @@ __mocks__/expo-secure-store.ts
 | ID | Decision | Reason |
 |---|---|---|
 | D10 | `Entry = { id, category, date, durationMinutes, note, status }` exactly as in the brief. | |
-| D11 | **The device generates ids** for new entries (`loc_<time>_<random>`) and the server keeps that id. | A queued submit, the list row and a deep link can refer to the entry before it has synced, with no id remapping. |
+| D11 | **The device generates ids** for new entries, as `srv_<n>`: one more than the highest number among the entries it knows (synced and queued). The server keeps that id. | A queued submit, the list row and a deep link can refer to the entry before it has synced, with no id remapping. Numbering on the device is safe here because there is one device and one user; with several devices the server would have to assign the number. |
 | D12 | **(revised)** The client talks to the server in HTTP terms: method, path, `Authorization: Bearer` header, JSON body, status code. The fake server exposes one fetch-shaped function, `fakeFetch(path, init)`, that returns `{ status, ok, json() }` and rejects like `fetch` does when the network is down. The global `fetch` is not touched and nothing leaves the device. | The server lives in the same JavaScript process, so data reaches it by a function call, not over a socket. Keeping the call shaped like `fetch` means moving to a real backend is a one-line swap of the transport in `client.ts`. |
 | D13 | Routes: `GET /entries`, `PUT /entries/:id` (save draft), `POST /entries/:id/submit`, `POST /auth/refresh`. | |
 | D14 | **(confirmed, status-based)** `PUT` and `submit` are upserts by id. If the server row is already **submitted**, both return 409 with the server copy, whether the change was made online or offline. Otherwise `PUT` creates or overwrites the draft, and `submit` creates the row if missing and marks it submitted. | "Submitted rows belong to the server." Changes to drafts, including ones queued offline, are always applied, so nothing queued offline is lost. |
@@ -189,7 +189,7 @@ adb shell am start -W -a android.intent.action.VIEW -d "worklog://entries/srv_1"
 | D49 | Static **`app.json`**. | Nothing in the config is computed. |
 | D50 | **(revised)** `name: "Work Log"`, `slug: "worklog"`, `scheme: "worklog"`, `version: "1.0.0"`, `ios.bundleIdentifier` and `android.package` both **`com.quixta.worklog`**. | |
 | D51 | `runtimeVersion: { "policy": "appVersion" }`. | Easiest to explain and audit: the runtime version is the store version, so a native change means a version bump. `RELEASE.md` names the `fingerprint` policy as the next step. |
-| D52 | `updates.url` with a placeholder project id (`00000000-0000-0000-0000-000000000000`), same id in `extra.eas.projectId`, `checkAutomatically: "ON_LOAD"`, `fallbackToCacheTimeout: 0`. | The brief allows a placeholder. The app starts on the cached bundle and picks up an update on the next launch. |
+| D52 | `updates.url` and `extra.eas.projectId` hold the project id written by `eas init`. `checkAutomatically: "ON_LOAD"`, `fallbackToCacheTimeout: 0`. | The app starts on the cached bundle and picks up an update on the next launch. |
 | D53 | `eas.json`: `development` (dev client, internal distribution), `preview` (internal distribution), `production` (`autoIncrement`), each with `channel` equal to the profile name. `cli.appVersionSource: "remote"`. | Build numbers are owned by EAS, so nobody bumps them by hand. |
 
 `RELEASE.md` positions, one page:
