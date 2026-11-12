@@ -160,4 +160,14 @@ A better setup would be:
 
 The app already treats step 4 as `Session expired` (there is a test for a refused refresh token in `__tests__/sync.refresh.test.ts`), but the fake server has no handle to expire the refresh token. The better setup would add one, for example `expireRefreshToken()`, and use it in place of `failRetryAfterRefresh()`. A `401` on the retry would then be treated as an ordinary failed request, not as the end of the session.
 
-<!-- TODO (Harshit): before sending, note here anything from the brief that was not checked by hand, for example warm and cold deep link on each platform. -->
+## AI Tools
+I used Claude code to complete this assigment for development and testing, the decisions and test cases were written by me and polished by claude
+
+### Where I disagreed with Claude's plan
+
+| | What Claude planned | What I changed |
+|---|---|---|
+| **Talking to the fake server** | The fake server was a module of async functions returning `{ status, body }`, called directly by the client. | The client talks to it in HTTP terms through one fetch-shaped function, `fakeFetch(path, init)`: method, path, `Authorization` header, JSON body, status code. Moving to a real backend is then a swap of the transport in `src/api/client.ts`. |
+| **Ids for new entries** | Random ids made on the device, such as `loc_m3k2x9_4f7a1c`. | Ids start with `srv_` and count up: `srv_2`, `srv_3`, and so on. |
+| **An entry created and then edited offline** | Every change was its own request in the queue. The edit was sent after the create and could be refused with `Server copy kept`, although the server never had a copy of its own. | An edit updates the request already waiting in the queue. The queue holds one change per entry, and the server receives the final version once. |
+| **What "session expired" means** | A `401` on the retry after a successful refresh, as the brief describes, with nothing said about it. | The code still follows the brief, but the README now explains the setup I consider correct: the session has expired when the refresh request itself returns `401`. See "A better setup for session expiry". |
