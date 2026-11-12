@@ -142,7 +142,22 @@ Other documents: [`CONFLICTS.md`](CONFLICTS.md) for the conflict rule, [`RELEASE
 - **`Session expired` has no sign-in screen.** There is no real sign-in. The queued change is kept, and tapping Sync again is a new attempt that may refresh once more.
 - **`Server copy kept` is not saved.** The notice stays on the row until the app restarts or the entry is edited again.
 - **The date is typed, not picked.** It must be a real date in `YYYY-MM-DD`.
-- **No delete, and the queue is not compacted.** Two queued edits to one entry are sent one after the other.
+- **No delete.** An entry cannot be removed.
 - **No ESLint or CI.**
+
+## A better setup for session expiry
+
+The brief models an expired session as a `401` on the retry: the access token expires, the refresh succeeds, and the call made with the new token is refused as well. `failRetryAfterRefresh()` exists to produce that, and the app shows `Session expired` for it, as asked.
+
+On a real backend that sequence is unusual. A refresh that succeeds returns a token that works. A session ends when the **refresh token** stops being valid, so the `401` that means "session expired" comes from the refresh request itself, and there is no retry to make.
+
+A better setup would be:
+
+1. A call returns `401`. The access token has expired.
+2. The app calls refresh once.
+3. If refresh returns a new access token, the app stores it and retries the call once.
+4. If refresh itself returns `401`, the refresh token is no longer valid. The app shows `Session expired`, keeps the queue, and sends the user to sign in.
+
+The app already treats step 4 as `Session expired` (there is a test for a refused refresh token in `__tests__/sync.refresh.test.ts`), but the fake server has no handle to expire the refresh token. The better setup would add one, for example `expireRefreshToken()`, and use it in place of `failRetryAfterRefresh()`. A `401` on the retry would then be treated as an ordinary failed request, not as the end of the session.
 
 <!-- TODO (Harshit): before sending, note here anything from the brief that was not checked by hand, for example warm and cold deep link on each platform. -->

@@ -132,7 +132,7 @@ Test handles, exported from `src/api/fakeServer.ts`:
 | ID | Decision | Reason |
 |---|---|---|
 | D22 | Two queued operation kinds, matching the brief: `saveDraft` and `submit`. Each carries the full entry. An edit is a `saveDraft` for an id that already exists. | "Save draft queues a draft. Submit queues a submit." |
-| D23 | The queue is FIFO with no merging of operations. Every change goes through the queue, online or offline. | "Both try to sync straight away." One path to test. |
+| D23 | **(revised)** The queue holds at most one change per entry, in the order the entries were first queued. A new change for an entry that already has one waiting replaces it in place; a waiting submit stays a submit. Every change goes through the queue, online or offline. | An entry created and then edited offline must reach the server once, with the final values. Sent as two requests, a submit followed by an edit made the device conflict with its own earlier version and show `Server copy kept` for a row the server never had. |
 | D24 | `sync()` pushes the queue in order, then pulls `GET /entries` and replaces the cache. It takes no arguments. | A sync with an empty queue still makes an authorised call, and a cold-start deep link gets fresh data. |
 | D25 | **(revised)** Only one sync runs at a time. A call that arrives while one is running waits for it, then runs once more; all waiting callers share that one extra run. | A change saved during a running sync must not be left behind. |
 | D26 | **Offline:** the first failed request stops the run. Every queued operation stays. Result status `offline`; affected rows show `Waiting to sync`. | |
@@ -236,4 +236,4 @@ adb shell am start -W -a android.intent.action.VIEW -d "worklog://entries/srv_1"
 
 ## 5. Not doing
 
-Real backend, real sign-in, push notifications or a working notification setup, publishing, queue compaction, visual polish, ESLint, CI.
+Real backend, real sign-in, push notifications or a working notification setup, publishing, visual polish, ESLint, CI.

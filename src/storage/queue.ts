@@ -30,17 +30,36 @@ export function readQueue(): Promise<QueuedOp[]> {
 }
 
 /**
- * Adds a change to the end of the queue. The stored entry carries the status
- * the change is asking for: draft for saveDraft, submitted for submit.
+ * Queues a change. The stored entry carries the status the change is asking
+ * for: draft for saveDraft, submitted for submit.
+ *
+ * The queue holds at most one change per entry. If one is already waiting for
+ * this entry, the new values replace it where it stands, so the server only
+ * ever receives the latest version. Without this, an entry created and then
+ * edited offline would be sent twice, and if the first was a submit the edit
+ * would be refused as a conflict with the device's own earlier version.
+ *
+ * A waiting submit stays a submit: saving more edits does not un-submit it.
+ *
+ * The replacement gets a new opId. If a sync is sending the old one at this
+ * moment, its removeOp will not match, and the new values are sent next.
  */
 export function enqueue(kind: OpKind, entry: Entry): Promise<QueuedOp> {
   return inOrder(async () => {
+    const queue = await read();
+    const index = queue.findIndex((queued) => queued.entry.id === entry.id);
+    const waiting = index === -1 ? null : queue[index];
+
+    const finalKind: OpKind = waiting?.kind === 'submit' ? 'submit' : kind;
     const op: QueuedOp = {
       opId: newId('op'),
-      kind,
-      entry: { ...entry, status: kind === 'submit' ? 'submitted' : 'draft' },
+      kind: finalKind,
+      entry: { ...entry, status: finalKind === 'submit' ? 'submitted' : 'draft' },
     };
-    await write([...(await read()), op]);
+
+    if (index === -1) queue.push(op);
+    else queue[index] = op;
+    await write(queue);
     return op;
   });
 }
