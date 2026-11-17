@@ -3,7 +3,7 @@
 A small work-log app: add entries, keep them on the device while offline, and sync them to a server. The server is fake and lives in memory inside the app, so nothing needs to be running besides Expo.
 
 - **Expo SDK:** 58 (`expo ~58.0.24`, React Native 0.88, React 19, Expo Router, TypeScript strict)
-- **Time spent:** _TODO (Harshit to fill in)_
+- **Time spent:** ~5 hours
 
 ## Commands
 
